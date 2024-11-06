@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" href="data:,">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ジョイスティック</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="joystick-container">
+    <div id="joystick-handle"></div>
+  </div>
+
+  <script>
+    const container = document.getElementById("joystick-container");
+    const handle = document.getElementById("joystick-handle");
+    const containerRect = container.getBoundingClientRect();
+
+    // 中心からの最大移動距離
+    const maxDistance = containerRect.width / 2 - handle.offsetWidth / 2;
+
+    container.addEventListener("pointerdown", startDrag);
+    document.addEventListener("pointerup", stopDrag);
+    document.addEventListener("pointermove", handleDrag);
+
+    let isDragging = false;
+
+    var json_temp = {
+      STICK_X: 0,
+      STICK_Y: 0
+    }
+
+    function startDrag(event) {
+      isDragging = true;
+    }
+
+    function stopDrag(event) {
+      isDragging = false;
+      // ハンドルを中央に戻す
+      handle.style.transform = "translate(-50%, -50%)";
+      send_status(0, 0);
+    }
+
+    function handleDrag(event) {
+      if (!isDragging) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const x = event.clientX - containerRect.left - containerRect.width / 2;
+      const y = event.clientY - containerRect.top - containerRect.height / 2;
+
+      const distance = Math.min(Math.sqrt(x * x + y * y), maxDistance);
+
+      const angle = Math.atan2(y, x);
+      const handleX = distance * Math.cos(angle);
+      const handleY = distance * Math.sin(angle); // Y方向を逆に
+
+      handle.style.transform = `translate(${handleX - handle.offsetWidth / 2}px, ${handleY - handle.offsetHeight / 2}px)`;
+
+      // 座標を取得
+      const normalizedX = handleX / maxDistance;
+      const normalizedY = handleY / maxDistance;
+      console.log("X:", normalizedX.toFixed(2), "Y:", -normalizedY.toFixed(2));
+      send_status(normalizedX.toFixed(2), normalizedY.toFixed(2));
+    }
+
+    function send_status(x, y){
+      // JSONデータの作成
+      var send_json = json_temp;
+      send_json.STICK_X = x * 255;
+      send_json.STICK_Y = -y * 255;
+      send_json = JSON.stringify(send_json);
+      // リクエストを送信
+      var xhr = new XMLHttpRequest()
+      xhr.open("POST", "/post_test", true)
+      xhr.setRequestHeader("Content-Type", "application/json")
+      xhr.send(send_json)
+    }
+  </script>
+  
+</body>
+</html>
