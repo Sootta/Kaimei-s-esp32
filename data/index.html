@@ -8,12 +8,92 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
   <div id="joystick-container">
     <div id="joystick-handle"></div>
   </div>
 
+  <div id="s_joystick-container">
+    <div id="s_joystick-handle"></div>
+  </div>
+
+
+
   <script>
+    var json_temp = {
+      STICK_X: 0,
+      STICK_Y: 0,
+      SARVO_X: 0,
+      SARVO_Y: 0
+    }
+
+
+    const s_container = document.getElementById("s_joystick-container");
+    const s_handle = document.getElementById("s_joystick-handle");
+    const s_containerRect = s_container.getBoundingClientRect();
+
+    let s_x = 0;
+    let s_y = 0;
+
+    // 中心からの最大移動距離
+    const s_maxDistance = s_containerRect.width / 2 - s_handle.offsetWidth / 2;
+
+    s_container.addEventListener("pointerdown", s_startDrag);
+    document.addEventListener("pointerup", s_stopDrag);
+    document.addEventListener("pointermove", s_handleDrag);
+
+    let isDragging = false;
+
+    function s_startDrag(event) {
+      isDragging = true;
+    }
+
+    function s_stopDrag(event) {
+      isDragging = false;
+      // ハンドルを中央に戻す
+      //s_handle.style.transform = "translate(-50%, -50%)";
+      console.log(s_handle.style.transform);
+      send_status(0, 0);
+    }
+
+    function s_handleDrag(event) {
+      if (!isDragging) return;
+
+      const containerRect = s_container.getBoundingClientRect();
+      const x = event.clientX - containerRect.left - containerRect.width / 2;
+      const y = event.clientY - containerRect.top - containerRect.height / 2;
+
+      const distance = Math.min(Math.sqrt(x * x + y * y), s_maxDistance);
+
+      const angle = Math.atan2(y, x);
+      const handleX = distance * Math.cos(angle);
+      const handleY = distance * Math.sin(angle); // Y方向を逆に
+      
+      let xx = handleX - s_handle.offsetWidth / 2;
+      if(xx < -25){
+        xx = -25;
+      }
+      let yy = handleY - s_handle.offsetHeight / 2;
+      if(yy > -25){
+        yy = -25;
+      }
+
+      s_handle.style.transform = `translate(${xx}px, ${yy}px)`;
+
+      // 座標を取得
+      const normalizedX = handleX / s_maxDistance;
+      const normalizedY = handleY / s_maxDistance;
+      //console.log(handleX - s_handle.offsetWidth / 2, handleY - s_handle.offsetHeight / 2);
+      //console.log(s_handle.style.transform);
+      console.log("X:", normalizedX.toFixed(2), "Y:", -normalizedY.toFixed(2));
+      s_x = normalizedX.toFixed(2);
+      s_y = normalizedY.toFixed(2);
+      s_send_status(0, 0);
+    }
+
+
+
+    let s_isDragging = false;
+
     const container = document.getElementById("joystick-container");
     const handle = document.getElementById("joystick-handle");
     const containerRect = container.getBoundingClientRect();
@@ -25,26 +105,19 @@
     document.addEventListener("pointerup", stopDrag);
     document.addEventListener("pointermove", handleDrag);
 
-    let isDragging = false;
-
-    var json_temp = {
-      STICK_X: 0,
-      STICK_Y: 0
-    }
-
     function startDrag(event) {
-      isDragging = true;
+      s_isDragging = true;
     }
 
     function stopDrag(event) {
-      isDragging = false;
+      s_isDragging = false;
       // ハンドルを中央に戻す
       handle.style.transform = "translate(-50%, -50%)";
       send_status(0, 0);
     }
 
     function handleDrag(event) {
-      if (!isDragging) return;
+      if (!s_isDragging) return;
 
       const containerRect = container.getBoundingClientRect();
       const x = event.clientX - containerRect.left - containerRect.width / 2;
@@ -62,14 +135,27 @@
       const normalizedX = handleX / maxDistance;
       const normalizedY = handleY / maxDistance;
       console.log("X:", normalizedX.toFixed(2), "Y:", -normalizedY.toFixed(2));
-      send_status(normalizedX.toFixed(2), normalizedY.toFixed(2));
+      s_send_status(normalizedX.toFixed(2), normalizedY.toFixed(2));
     }
 
-    function send_status(x, y){
+
+    function s_send_status(x, y){
+      let sarvo_x = s_x;
+      let sarvo_y = -1 * s_y;
+
+      if(sarvo_x < 0) {
+        sarvo_x = 0;
+      }
+      if(sarvo_y < 0) {
+        sarvo_y = 0;
+      }
+
       // JSONデータの作成
       var send_json = json_temp;
       send_json.STICK_X = x * 255;
       send_json.STICK_Y = -y * 255;
+      send_json.SARVO_X = sarvo_x;
+      send_json.SARVO_Y = sarvo_y;
       send_json = JSON.stringify(send_json);
       // リクエストを送信
       var xhr = new XMLHttpRequest()

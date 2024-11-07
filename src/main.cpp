@@ -28,6 +28,8 @@ const int THIRD_CHANNEL = 6;
 
 int joystick_x;
 int joystick_y;
+double sarvo_x;
+double sarvo_y;
 //----------------------------------------------------
 
 void setup()
@@ -87,13 +89,17 @@ void setup()
       else{
         joystick_x = doc["STICK_X"];       //zz Tilt Motor Default SPEED
         joystick_y = doc["STICK_Y"];
+        sarvo_x = doc["SARVO_X"];
+        sarvo_y = doc["SARVO_Y"];
         request->send(200);
       }
   });
 
   joystick_x = 0;
   joystick_y = 0;
-
+  sarvo_x = 0;
+  sarvo_y = 0;
+/*
   ledcSetup(FIRST_CHANNEL, 10000, 8);
   ledcSetup(SECOND_CHANNEL, 10000, 8);
   ledcSetup(THIRD_CHANNEL, 10000, 8);
@@ -104,7 +110,7 @@ void setup()
   pinMode(FIRST_DIR_PIN, OUTPUT);
   pinMode(SECOND_DIR_PIN, OUTPUT);
   pinMode(THIRD_DIR_PIN, OUTPUT);
-
+*/
   // サーバースタート
   server.begin();
 
@@ -112,7 +118,7 @@ void setup()
 }
 
 void loop() {
-
+/*
   int vector[] = {0,0,0};
   vector[0] = joystick_x * 1;
   vector[1] = joystick_x * -1/2 + joystick_y * sqrt(3)/2;
@@ -126,4 +132,8 @@ void loop() {
     digitalWrite(THIRD_DIR_PIN, vector[2] > 0 ? LOW:HIGH);
     ledcWrite(THIRD_CHANNEL, abs(vector[2]));
   }
+*/
+  Serial.print(sarvo_x * 100);
+  Serial.println(sarvo_y * 100);
+  delay(200);
 }
