@@ -30,6 +30,15 @@ int joystick_x;
 int joystick_y;
 double sarvo_x;
 double sarvo_y;
+
+Servo upservo;
+Servo downservo;
+
+const int UP_SERVO_PIN  = 8;
+const int DOWN_SERVO_PIN = 9;
+
+int up_servo_deg = 90;
+int down_servo_deg = 90;
 //----------------------------------------------------
 
 void setup()
@@ -99,7 +108,7 @@ void setup()
   joystick_y = 0;
   sarvo_x = 0;
   sarvo_y = 0;
-/*
+
   ledcSetup(FIRST_CHANNEL, 10000, 8);
   ledcSetup(SECOND_CHANNEL, 10000, 8);
   ledcSetup(THIRD_CHANNEL, 10000, 8);
@@ -110,7 +119,13 @@ void setup()
   pinMode(FIRST_DIR_PIN, OUTPUT);
   pinMode(SECOND_DIR_PIN, OUTPUT);
   pinMode(THIRD_DIR_PIN, OUTPUT);
-*/
+
+  upservo.attach(UP_SERVO_PIN);
+  downservo.attach(DOWN_SERVO_PIN);
+
+  upservo.write(up_servo_deg);
+  downservo.write(down_servo_deg);
+
   // サーバースタート
   server.begin();
 
@@ -118,11 +133,17 @@ void setup()
 }
 
 void loop() {
-/*
+
   int vector[] = {0,0,0};
   vector[0] = joystick_x * 1;
-  vector[1] = joystick_x * -1/2 + joystick_y * sqrt(3)/2;
-  vector[2] = joystick_x * -1/2 - joystick_y * sqrt(3)/2;
+  vector[1] = joystick_x * -1.0/2 + joystick_y * sqrt(3)/2;
+  vector[2] = joystick_x * -1.0/2 - joystick_y * sqrt(3)/2;
+
+  up_servo_deg = map(sarvo_x, 0, 1, 90, 180);
+  down_servo_deg = 90 - map(sarvo_y, 0, 1, 0, 90);
+
+  upservo.write(up_servo_deg);
+  downservo.write(down_servo_deg);
 
   if((vector[0] + vector[1] + vector[2]) / 3 <= 40) {
     digitalWrite(FIRST_DIR_PIN, vector[0] > 0 ? LOW:HIGH);
@@ -132,8 +153,14 @@ void loop() {
     digitalWrite(THIRD_DIR_PIN, vector[2] > 0 ? LOW:HIGH);
     ledcWrite(THIRD_CHANNEL, abs(vector[2]));
   }
-*/
+  /*
   Serial.print(sarvo_x * 100);
-  Serial.println(sarvo_y * 100);
+  Serial.print(" ");
+  Serial.print(sarvo_y * 100);
+  Serial.print(" ");
+  Serial.print(joystick_x);
+  Serial.print(" ");
+  Serial.println(joystick_y);
   delay(200);
+  */
 }
